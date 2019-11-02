@@ -1,7 +1,4 @@
-import socket
 import os
-import json
-import asynchat
 
 
 class Hosts:
