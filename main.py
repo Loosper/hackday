@@ -5,6 +5,7 @@ import hashlib
 import argparse
 
 import dht
+import constants as const
 import comms
 
 
@@ -17,7 +18,8 @@ def validate_ip(ip):
 parser = argparse.ArgumentParser(
     description='Secure & distributed file storage'
 )
-parser.add_argument('entry', gltype=validate_ip)
+parser.add_argument('entry', type=validate_ip)
+parser.add_argument('port', type=int)
 parser.add_argument(
     '-u', help='upload a file to the network', dest='upload')
 parser.add_argument(
@@ -26,24 +28,33 @@ parser.add_argument(
     '-l', help='run a node in the network', dest='listen')
 
 
-
-
 if __name__ == "__main__":
     args = parser.parse_args()
     ip = '127.0.0.1'
-    port = 2000
 
-    server = comms.Server(port)
+    server = comms.Server()
     server.start()
+    try:
+        print(comms.find_id(args.entry, args.port))
 
-    if args.listen:
+        if args.listen:
+            pass
+        elif args.upload:
+            id = hashlib.sha1(args.upload.encode('utf-8')).digest()[:(const.KEY_LEN // 8)]
+            peers = comms.find_peer(id)
+            peers.sort(key=lambda x: dht.table._get_bucket(x[0]))
+            # print(peers)
+            # while True:
+            #     comms.send('hello', ip, port)
+            #     input()
+    except ConnectionRefusedError:
+        print('couln\'t connect to anyone')
+        print('youre might be the first on the network')
         pass
-        # while True:
-        #     comms.send('hello', ip, port)
-        #     input()
 
 
-
-
-    server.join()
+    try:
+        server.join()
+    except KeyboardInterrupt:
+        server.close()
 

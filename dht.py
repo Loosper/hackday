@@ -1,8 +1,9 @@
 import random
 import re
 
+import constants as const
+import comms
 
-KEY_LEN = 8
 
 def make_id(bits):
     return random.getrandbits(bits).to_bytes(bits // 8, 'big')
@@ -10,9 +11,10 @@ def make_id(bits):
 
 class DHT:
     def __init__(self):
-        self.key_len = KEY_LEN
+        self.key_len = const.KEY_LEN
         self.node_id = make_id(self.key_len)
         self.node_table = [[] for _ in range(self.key_len)]
+        self.add_node(self.node_id, const.IP, const.PORT)
         # print(self.node_id)
 
     def __repr__(self):
@@ -35,22 +37,23 @@ class DHT:
 
     def _get_bucket(self, id):
         assert type(id) is bytes
-        assert len(id) == self.key_len // 8
+        assert len(id) == (self.key_len // 8)
 
         for i in range(self.key_len):
             if not self._bit_equal(self.node_id, id, i):
                 return i
+        return const.KEY_LEN - 1
 
 
     def add_node(self, new_id, ip, port):
-        assert port >= 0
-        assert port < 2 ** 16
+        # assert port >= 0
+        # assert port < 2 ** 16
         assert re.match(r'\d{1,4}\.\d{1,4}\.\d{1,4}\.\d{1,4}', ip)
 
         self.node_table[self._get_bucket(new_id)].\
             append((new_id, ip, port))
 
-    def find_node(self, new_id, n):
+    def find_node(self, new_id):
         bucket_id = self._get_bucket(new_id)
 
         # check if it's there
@@ -59,7 +62,7 @@ class DHT:
                 return node
 
         # return the top n otherwise
-        return self.node_table[bucket_id][0: n]
+        return self.node_table[bucket_id][0: const.N]
 
     def remove_node(self, id):
         bucket_id = self._get_bucket(id)
@@ -69,8 +72,8 @@ class DHT:
                 self.node_table[bucket_id].pop(i)
 
 
+table = DHT()
 
 if __name__ == '__main__':
-    table = DHT()
     table.add_node(b'\xff', '127.0.0.1', 44)
     print(table)
