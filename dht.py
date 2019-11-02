@@ -62,7 +62,7 @@ class DHT:
         return self.node_table[bucket_id][0: n]
 
     def remove_node(self, id):
-        bucket_id = self._get_bucket()
+        bucket_id = self._get_bucket(id)
         # warning: inefficient
         for i, node in enumerate(self.node_table[bucket_id]):
             if node[0] == id:
